@@ -153,6 +153,7 @@ public:
      ros::Subscriber sub_line_info;   //订阅车道线信息
      ros::Subscriber sub_socket;      //订阅MFC上位机命令
      ros::Subscriber sub_localpath;        //订阅TEB路径
+     ros::Subscriber sub_nav_status;
 
      //发布话题
      ros::Publisher pub_odom;              //发布odom topic
@@ -161,6 +162,7 @@ public:
      ros::Publisher pub_battery;           //发布电池 topic
      ros::Publisher pub_targetpt;
      ros::Publisher pub_test;
+     
      //坐标变换
      tf::TransformListener tf_listener;
 
@@ -174,6 +176,7 @@ public:
      void socket_callback(const std_msgs::String::ConstPtr& msg);     //socket回调函数
      void localpath_callback(const nav_msgs::Path::ConstPtr& msg);  
      void teb_control_callback(const ros::TimerEvent&);
+     void movebase_fb_callbcack(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg);
 };
 
 #endif 
