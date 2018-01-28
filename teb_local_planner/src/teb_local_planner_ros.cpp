@@ -469,12 +469,12 @@ bool TebLocalPlannerROS::isGoalReached()
     ROS_INFO("GOAL Reached!");
     planner_->clearPlanner();
     goal_reached_info=1;
-    ROS_INFO("goal_reached_info=%i",goal_reached_info);
+    // ROS_INFO("goal_reached_info=%i",goal_reached_info);
     goal_reach_msg.data=goal_reached_info;
     GOAL_OR_NOT_pub_.publish(goal_reach_msg);
     return true;
   }
-  ROS_INFO("goal_reached_info=%i",goal_reached_info);
+  // ROS_INFO("goal_reached_info=%i",goal_reached_info);
   goal_reach_msg.data=goal_reached_info;
   GOAL_OR_NOT_pub_.publish(goal_reach_msg);
   return false;

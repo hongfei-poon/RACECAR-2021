@@ -34,7 +34,7 @@ TebLocalPlannerROS:
   dt_hysteresis: 0.015 #根据当前时间分辨率自动调整大小的滞后现象，通常约为。建议使用dt ref的10%
   
   #global_plan_overwrite_orientation: True #覆盖由全局规划器提供的局部子目标的方向
-  max_global_plan_lookahead_dist: 2.0 #指定考虑优化的全局计划子集的最大长度
+  max_global_plan_lookahead_dist: 2.1 #指定考虑优化的全局计划子集的最大长度
   feasibility_check_no_poses: 4 #每个采样间隔的姿态可行性分析数，default：4
   global_plan_overwrite_orientation: True     
   #publish_feedback: True 
@@ -50,8 +50,8 @@ TebLocalPlannerROS:
   max_vel_x: 1.0
   max_vel_x_backwards: 0.45
   max_vel_theta: 0.9
-  acc_lim_x: 0.500
-  acc_lim_theta: 3.0
+  acc_lim_x: 5.500
+  acc_lim_theta: 125.0
 
   #仅适用于全向轮
   # max_vel_y (double, default: 0.0)  
@@ -107,16 +107,16 @@ TebLocalPlannerROS:
   no_outer_iterations: 4
   optimization_activate: True
   optimization_verbose: False
-  penalty_epsilon: 0.14
+  penalty_epsilon: 0.14 #0.14
   weight_inflation: 1000
-  weight_max_vel_x: 300
+  weight_max_vel_x: 30 #300
   weight_max_vel_theta: 1
   weight_acc_lim_x: 350
   weight_acc_lim_theta: 1
   weight_kinematics_nh: 1000
   weight_kinematics_forward_drive: 500
   weight_kinematics_turning_radius: 1
-  weight_optimaltime: 400
+  weight_optimaltime: 25
   weight_obstacle: 1000
   weight_dynamic_obstacle: 1000 # not in use yet
   # alternative_time_cost: False # not in use yet

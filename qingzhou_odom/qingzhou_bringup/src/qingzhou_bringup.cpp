@@ -208,19 +208,30 @@ void actuator::localpath_callback(const nav_msgs::Path::ConstPtr& msg)
     
     if(num_of_pts<teb_min_pts) 
     {
-        follow_local_planner=true;
+        //follow_local_planner=true;
         target_index=num_of_pts-1;
         ROS_INFO("GOAL APPROACHING");
     }
     else
     {
         target_index=teb_min_pts-1;
-        follow_local_planner=false;
+        //follow_local_planner=false;
 
     }
     try
     {
         tf_listener.transformPose("base_link",ros::Time(0),teb_path.poses[target_index],"odom",pose_target);
+        float dx=pose_target.pose.position.x;
+        float dy=pose_target.pose.position.y;
+        float dist=sqrt(dx*dx+dy*dy);
+        if(dist<1.0)
+        {
+            follow_local_planner=true;
+        }
+        else
+        {
+            follow_local_planner=false;
+        }
     }
     catch(tf::TransformException &ex)
     {
@@ -320,13 +331,25 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
         else
         {
             diff_rot = 2*atan2(pose_target.pose.orientation.z,pose_target.pose.orientation.w);
-            diff_trans = sqrt(dx * dx + dy * dy);
+
+            // float factor_rot=5.0*fabs(diff_rot);
+            // if(factor_rot>0.3)
+            // {
+            //     factor_rot=0.3;
+            // }
+            // else
+            // {
+            //     factor_rot=factor_rot;
+            // }
+
+
+            diff_trans = sqrt(dx * dx + dy * dy) ;
             int sign = 1;
 
             if(dx > 0) sign = 1;
             else if(dx == 0) sign = 0;
             else sign = -1;
-            err_trans = controller_c_translation * dx + sign * fabs(controller_c_rotation * diff_rot);
+            err_trans = controller_c_translation * dx  + sign * fabs(controller_c_rotation * diff_rot);
             err_rot = sign * diff_rot;           
             //ROS_INFO("NEAR,err_trans=%f,err_rot=%f,dx=%f,dy=%f",err_trans,err_rot,dx,dy);
            
@@ -770,9 +793,9 @@ void actuator::pub_9250(){
     imuMsg.angular_velocity.y = gyroY;             
     imuMsg.angular_velocity.z = gyroZ;             
     imuMsg.angular_velocity_covariance = {         
-      0.6,0.0,0.0,
-      0.0,0.6,0.0,
-      0.0,0.0,0.6
+      0.04,0.0,0.0,
+      0.0,0.04,0.0,
+      0.0,0.0,0.04
     };
     
     imuMsg.linear_acceleration.x = accelX;        

@@ -49,7 +49,7 @@ class compress:
                 print(e)
 
             # cv_image = warpimg(cv_image)
-            cv_image = cv2.resize(cv_image, (160, 120))
+            cv_image = cv2.resize(cv_image, (640, 480))
 
             time_com = timer(5)
             msg = CompressedImage()

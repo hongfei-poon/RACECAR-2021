@@ -7,8 +7,8 @@
       <param name="servo_mid" value="63" type="int"/>
       <param name="calibrate_lineSpeed" value = "0" type = "int"/> 
       <param name="calibrate_angularSpeed" value = "0" type = "int"/> 
-      <param name="ticksPerMeter" value = "1636" type = "int"/>      <!-- 1235  -->
-      <param name="ticksPer2PI" value = "2600" type = "int"/>             <!--  26500  5800  -->
+      <param name="ticksPerMeter" value = "1543" type = "int"/>      <!-- 1235  -->
+      <param name="ticksPer2PI" value = "3000" type = "int"/>             <!--  26500  5800  -->
       <param name="lineTern" value="-0.5"/>
       <!-- 车道线比例控制函数，最后输出数据为：lineTern*车道线返回值+60,范围是29-87 -->
       <param name="vel1" value="0"/>
@@ -20,13 +20,13 @@
       <param name="line_kd" value="0.0"/>
       <param name="line_ki" value="0.0"/>
       <!--TEB CONTROLLER-->
-      <param name="controller_ang_kp" value="1.7"/>
+      <param name="controller_ang_kp" value="2.0"/>
       <param name="controller_ang_ki" value="0.0"/>
-      <param name="controller_ang_kd" value="0.9"/>
+      <param name="controller_ang_kd" value="0.0"/>
       <param name="controller_c_translation" value="0.5"/>
       <param name="controller_c_rotation" value="0.2"/>
       <param name="controller_ang_factor_vel" value="3.0"/>
-      <param name="controller_vel_kp" value="40.0"/><!--28-->
+      <param name="controller_vel_kp" value="30.0"/><!--28-->
       <param name="controller_vel_ki" value="0.0"/>
       <param name="max_vel" value="1.5"/>
       <param name="teb_min_pts" value="5"/><!--5-->
