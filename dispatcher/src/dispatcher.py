@@ -1,6 +1,16 @@
 #!/usr/bin/python
 #-*- coding:utf-8 -*-
 
+
+#装货区: (2.13,-3.31,-90)
+#viapoint1: (-0.22,-8.13,-180)#
+
+#卸货区: (-2.57,-6.23,90)
+#viapoint2: (0.82,-5.46,90)  #车道线入口前1.5m
+#viapoint3: (0.82,-4.43,90)  #车道线入口
+
+#红绿灯y: -5.19->-6.49
+
 import os
 import sys
 import tty
@@ -241,14 +251,14 @@ class CarDispatcherROS(threading.Thread):
         self.pub_target=rospy.Publisher('move_base_simple/goal',PoseStamped,queue_size=1)
         self.pub_initial=rospy.Publisher('/initialpose',PoseWithCovarianceStamped,queue_size=1)
         self.pub_viapoints_vis=rospy.Publisher('dispatcher/viapoints',PoseArray,queue_size=1)
+        
         #rospy.logerr("NO SERVICE")
   
        
         rospy.wait_for_service("move_base/clear_costmaps")
-        rospy.wait_for_service("move_base/make_plan")
 
         self.clearing_request = rospy.ServiceProxy("move_base/clear_costmaps",Empty)
-        self.plan_request = rospy.ServiceProxy("move_base/make_plan",GetPlan)
+        
 
         rospy.loginfo("services established!")
 
@@ -284,7 +294,7 @@ class CarDispatcherROS(threading.Thread):
 
 
 
-        #waiting point
+        #waiting point (0,0,0)
         self.waiting_point=PoseStamped()
         self.waiting_point.header.frame_id='map'
         self.waiting_point.pose.position.x=rospy.get_param('waiting_x',default=0.0)
@@ -299,40 +309,40 @@ class CarDispatcherROS(threading.Thread):
         self.initial.pose.pose=self.waiting_point
 
 
-        #loading point(1.879,-4.443,-90)
+        #loading point(2.13,-3.31,-90)
         self.loading_point=PoseStamped()
         self.loading_point.header.frame_id='map'
-        self.loading_point.pose.position.x=rospy.get_param('loading_x',default=2.23)
-        self.loading_point.pose.position.y=rospy.get_param('loading_y',default=-4.21)
+        self.loading_point.pose.position.x=rospy.get_param('loading_x',default=2.13)
+        self.loading_point.pose.position.y=rospy.get_param('loading_y',default=-3.31)
         loading_yaw=rospy.get_param('loading_yaw',default=-90)
         self.loading_point.pose.orientation.z=math.sin(0.5*loading_yaw*math.pi/180)
         self.loading_point.pose.orientation.w=math.cos(0.5*loading_yaw*math.pi/180)
 
-        #viapoint-1 (-0.645,-7.963,180)
+        #viapoint-1(-0.22,-8.13,-180)
         
         self.viapoint_1=PoseStamped()
         self.viapoint_1.header.frame_id='map'
-        self.viapoint_1.pose.position.x=rospy.get_param('vp1_x',default=0.29)
-        self.viapoint_1.pose.position.y=rospy.get_param('vp1_y',default=-7.90)
+        self.viapoint_1.pose.position.x=rospy.get_param('vp1_x',default=-0.22)
+        self.viapoint_1.pose.position.y=rospy.get_param('vp1_y',default=-8.13)
         vp1_yaw=rospy.get_param('vp1_yaw',default=180)
         self.viapoint_1.pose.orientation.z=math.sin(0.5*vp1_yaw*math.pi/180)
         self.viapoint_1.pose.orientation.w=math.cos(0.5*vp1_yaw*math.pi/180)
         
 
-        #unloading point  (-2.701,-+76,90)
+        #unloading point   (-2.57,-6.23,90)
         self.unloading_point=PoseStamped()
         self.unloading_point.header.frame_id='map'
-        self.unloading_point.pose.position.x=rospy.get_param('unloading_x',default=-2.35)
+        self.unloading_point.pose.position.x=rospy.get_param('unloading_x',default=-2.57)
         self.unloading_point.pose.position.y=rospy.get_param('unloading_y',default=-6.24)
         unloading_yaw=rospy.get_param('unloading_yaw',default=90)
         self.unloading_point.pose.orientation.z=math.sin(0.5*unloading_yaw*math.pi/180)
         self.unloading_point.pose.orientation.w=math.cos(0.5*unloading_yaw*math.pi/180)
 
-        #viapoint-2 (0.570,-4.148,90)
+        #viapoint-2 (0.82,-4.43,90)
         self.viapoint_2=PoseStamped()   
         self.viapoint_2.header.frame_id='map'   
-        self.viapoint_2.pose.position.x=rospy.get_param('vp2_x',default=0.89)
-        self.viapoint_2.pose.position.y=rospy.get_param('vp2_y',default=-4.02)
+        self.viapoint_2.pose.position.x=rospy.get_param('vp2_x',default=0.94)
+        self.viapoint_2.pose.position.y=rospy.get_param('vp2_y',default=-3.93)
         vp2_yaw=rospy.get_param('vp2_yaw',default=90)
         self.viapoint_2.pose.orientation.z=math.sin(0.5*vp2_yaw*math.pi/180)
         self.viapoint_2.pose.orientation.w=math.cos(0.5*vp2_yaw*math.pi/180)
@@ -343,6 +353,38 @@ class CarDispatcherROS(threading.Thread):
         self.viapoints_vis.poses[2]=self.viapoint_1.pose
         self.viapoints_vis.poses[3]=self.unloading_point.pose
         self.viapoints_vis.poses[4]=self.viapoint_2.pose
+        
+        #target rect
+        num_pts=30
+        self.rect_xmax=1.35
+        self.rect_xmin=0.18
+        self.rect_ymax=-3.83
+        self.rect_ymin=-5.89
+        self.pth=Path()
+        self.pth.header.frame_id='map'
+        pstart=PoseStamped()
+        pstart.pose.position.x=(self.rect_xmin+self.rect_xmax)/2
+        pstart.pose.position.y=self.rect_ymin
+        pstart.pose.orientation.z=math.sin(math.pi/4)
+        pstart.pose.orientation.w=math.cos(math.pi/4)
+        pend=PoseStamped()
+        pend.pose.position.x=pstart.pose.position.x
+        pend.pose.position.y=self.rect_ymax
+        pend.pose.orientation.x=0
+        pend.pose.orientation.y=0
+        pend.pose.orientation.z=math.sin(math.pi/4)
+        pend.pose.orientation.w=math.cos(math.pi/4)
+        self.pth.poses.append(pstart)
+        step_y=(pend.pose.position.y-pstart.pose.position.y)/num_pts
+
+        p=PoseStamped()
+        for i in range(num_pts):
+            p.pose.position.y=(i+1)*step_y+pstart.pose.position.y
+            p.pose.position.x=pstart.pose.position.x
+            p.pose.orientation=pstart.pose.orientation
+            self.pth.poses.append(p)
+        self.pth.poses.append(pend) 
+
         
 
         self.target=PoseStamped()
@@ -383,18 +425,17 @@ class CarDispatcherROS(threading.Thread):
                 rospy.loginfo("reach p2")    
                 #self.pipe.send(('message','vp2-reached'))
 
-        
-
-
     def run(self):
         while self.running:
  
                 #print('rospy running\r\n')
-                try:
+            
                     #if self.pipe.poll():
-                    print('begin to receive')
+                    #print('begin to receive')
                     received=self.pipe.recv()
-                    print('poll:',received)
+                    #print('poll:',received)
+                    rospy.loginfo('length=%f',len(self.pth.poses))
+                    self.pub_path.publish(self.pth)
                     #TODO:
                     self.pub_viapoints_vis.publish(self.viapoints_vis)
                     if received[0]==('cmd','running'):
@@ -402,7 +443,7 @@ class CarDispatcherROS(threading.Thread):
                         self.pub_cmd.publish(self.command)
                         rospy.loginfo('pipe sending')
                         #self.pipe.send(('cmd','running'))
-                        rospy.loginfo('finish sendin')
+                        rospy.loginfo('finish sending')
                         rospy.loginfo('running')
                     elif received[0]==('cmd','pause'):
                         self.command.data=received[0][1]
@@ -455,13 +496,13 @@ class CarDispatcherROS(threading.Thread):
                         self.viapoint_2.pose=received[1]
                         #self.pipe.send(('message','setting vp2'))
 
-                except:
-                    rospy.logerr('EXCEPT')
+
 
                     
         print('ROS:',received[0])
         print('CarDispatcherROS Thread Exit\n')
         os._exit(0)        
+
 
 
 
@@ -483,7 +524,7 @@ if __name__ == "__main__":
 
         (pipe_socket,pipe_ros)=multiprocessing.Pipe()
         car_dispatcher=CarDispatcherROS(pipe_ros)
-        ip=rospy.get_param('ip',default='192.168.31.9')
+        ip=rospy.get_param('ip',default='192.168.31.119')
         port=rospy.get_param('port',default=8888)
         #ip='192.168.68.1'
         #port=6000

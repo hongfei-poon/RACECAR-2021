@@ -48,6 +48,8 @@
 #include <base_local_planner/odometry_helper_ros.h>
 #include <base_local_planner/costmap_model.h>
 
+#include<std_msgs/Int16.h>
+
 
 // timed-elastic-band related classes
 #include <teb_local_planner/optimal_planner.h>
@@ -81,6 +83,7 @@
 #include <boost/shared_ptr.hpp>
 
 
+
 namespace teb_local_planner
 {
 
@@ -94,6 +97,8 @@ class TebLocalPlannerROS : public nav_core::BaseLocalPlanner, public mbf_costmap
 {
 
 public:
+
+
   /**
     * @brief Default constructor of the teb plugin
     */
@@ -416,10 +421,13 @@ private:
 
   boost::shared_ptr< dynamic_reconfigure::Server<TebLocalPlannerReconfigureConfig> > dynamic_recfg_; //!< Dynamic reconfigure server to allow config modifications at runtime
   ros::Subscriber custom_obst_sub_; //!< Subscriber for custom obstacles received via a ObstacleMsg.
+  ros::Publisher GOAL_OR_NOT_pub_;
+ 
   boost::mutex custom_obst_mutex_; //!< Mutex that locks the obstacle array (multi-threaded)
   costmap_converter::ObstacleArrayMsg custom_obstacle_msg_; //!< Copy of the most recent obstacle message
 
   ros::Subscriber via_points_sub_; //!< Subscriber for custom via-points received via a Path msg.
+
   bool custom_via_points_active_; //!< Keep track whether valid via-points have been received from via_points_sub_
   boost::mutex via_point_mutex_; //!< Mutex that locks the via_points container (multi-threaded)
 

@@ -2,7 +2,7 @@
 <launch>
   <master auto="start"/>
 
-  <include file="$(find qingzhou_nav)/launch/ydlidar.launch" />
+  
   <node name="map_server" pkg="map_server" type="map_server" args="/home/scut/map.yaml" output="screen"/>
   <!-- <node name="map_server" pkg="map_server" type="map_server" args="/home/scut/map.yaml" output="screen"/> -->
   <!-- <node name="map_server" pkg="map_server" type="map_server" args="$(find qingzhou_nav)/maps/map2.yaml" output="screen"/> -->

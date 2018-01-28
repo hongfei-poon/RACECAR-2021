@@ -25,10 +25,10 @@ class vision_control:
         # self.light_y_min=rospy.get_param("light_y_min",-1)  #红绿灯模块结束y坐标
 
         
-        self.light_x_max=rospy.get_param("light_x_max",2.92)  #红绿灯模块开启x坐标
-        self.light_x_min=rospy.get_param("light_x_min",1.49)  #红绿灯模块结束x坐标
-        self.light_y_max=rospy.get_param("light_y_max",-5.43)  #红绿灯模块开启y坐标
-        self.light_y_min=rospy.get_param("light_y_min",-6.42)  #红绿灯模块结束y坐标
+        self.light_x_max=rospy.get_param("light_x_max",2.51)  #红绿灯模块开启x坐标
+        self.light_x_min=rospy.get_param("light_x_min",1.69)  #红绿灯模块结束x坐标
+        self.light_y_max=rospy.get_param("light_y_max",-5.19)  #红绿灯模块开启y坐标
+        self.light_y_min=rospy.get_param("light_y_min",-6.49)  #红绿灯模块结束y坐标
 
         # self.linex1=rospy.get_param("linex1",1.7)
         # self.line_x_min1=rospy.get_param("line_x_min1",3.70)    #车道线启动区间   hotel
@@ -37,11 +37,11 @@ class vision_control:
         # self.line_y_min1=rospy.get_param("line_y_min1",-1)
         # self.line_y_max1=rospy.get_param("line_y_max1",0.5)
 
-        self.line_x_min1=rospy.get_param("line_x_min1",0.18)    #车道线启动区间
-        self.line_x_max1=rospy.get_param("line_x_max1",1.79)
+        self.line_x_min1=rospy.get_param("line_x_min1",0)    #车道线启动区间
+        self.line_x_max1=rospy.get_param("line_x_max1",1.69)
         # self.liney1=rospy.get_param("liney1",-1.1)
-        self.line_y_min1=rospy.get_param("line_y_min1",-4.46)
-        self.line_y_max1=rospy.get_param("line_y_max1",-3.86)
+        self.line_y_min1=rospy.get_param("line_y_min1",-4.70)
+        self.line_y_max1=rospy.get_param("line_y_max1",-4.10)
 
         # self.line_x_min2=rospy.get_param("line_x_min2",4.60)   #车道线停止区间   hotel
         # self.line_x_max2=rospy.get_param("line_x_max2",4.50)
@@ -49,9 +49,9 @@ class vision_control:
         # self.line_y_max2=rospy.get_param("line_y_max2",0.5)
         
         self.line_x_min2=rospy.get_param("line_x_min2",-2.75)   #车道线停止区间
-        self.line_x_max2=rospy.get_param("line_x_max2",-1.36)
-        self.line_y_min2=rospy.get_param("line_y_min2",-1.78)
-        self.line_y_max2=rospy.get_param("line_y_max2",-0.84)
+        self.line_x_max2=rospy.get_param("line_x_max2",-0.36)
+        self.line_y_min2=rospy.get_param("line_y_min2",-1.48)
+        self.line_y_max2=rospy.get_param("line_y_max2",0)
 
 
         self.c1x=rospy.get_param("c1x",-1.408)

@@ -15,7 +15,7 @@ actuator::actuator(ros::NodeHandle handle)
    angularSpeed = 0;              
    batteryVoltage = 0;
    nav_status = NAVIGATION;
-
+   goal_reached=true;
    light_info=0;
 
    line_info=0;
@@ -133,7 +133,7 @@ actuator::actuator(ros::NodeHandle handle)
     sub_move_base = handle.subscribe("cmd_vel",1,&actuator::callback_move_base,this);
 	sub_light_info = handle.subscribe("light_control", 5, &actuator::light_callback, this);
     sub_localpath = handle.subscribe("/move_base/TebLocalPlannerROS/local_plan",1,&actuator::localpath_callback,this);
-    sub_nav_status = handle.subscribe("/move_base/feedback",1,&actuator::movebase_fb_callbcack,this);
+    sub_nav_status = handle.subscribe("/move_base/TebLocalPlannerROS/GOAL_OR_NOT",1,&actuator::movebase_fb_callbcack,this);
 
     // cout << "sub_ok" << endl;
 	// cout << light_info << endl;
@@ -231,8 +231,17 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
     //ROS_INFO("TIMERCB");
     int num_of_pts=teb_path.poses.size();
 
-
+    if(goal_reached)
+    {
+        pose_target.pose.position.x=0;
+        pose_target.pose.position.y=0;
+        pose_target.pose.orientation.x=0;
+        pose_target.pose.orientation.y=0;
+        pose_target.pose.orientation.z=0;
+        pose_target.pose.orientation.w=1;
+    }
     
+
     float dx=pose_target.pose.position.x;
     float dy=pose_target.pose.position.y;
     float diff_rot = 0;
@@ -251,7 +260,7 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
     else;
     if(num_of_pts==0)
     {
-        ROS_INFO("000");
+        //ROS_INFO("000");
         diff_rot=0;
         diff_trans=0;
         dx=0;
@@ -333,7 +342,7 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
 
         //pose_target.pose.orientation.w=cos(err_rot);
         //pose_target.pose.orientation.z=sin(err_rot);
-        ROS_INFO("PUBLISH");
+        //ROS_INFO("PUBLISH");
         pub_targetpt.publish(pose_target);
     }
 
@@ -357,7 +366,7 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
         }
         else
         {
-            ROS_INFO("NUMPTS=0");
+            //ROS_INFO("NUMPTS=0");
             moveBaseControl.TargetSpeed=0;
             moveBaseControl.TargetAngle=servo_mid;
 
@@ -544,10 +553,19 @@ void actuator::socket_callback(const std_msgs::String::ConstPtr& msg)
     cout<<"msg="<<socket_cmd<<endl;
 }
 
-void actuator::movebase_fb_callbcack(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
+void actuator::movebase_fb_callbcack(const std_msgs::Int16::ConstPtr& msg)
 {
-    ROS_INFO("STATUS=%d",msg->status.status);
+    //ROS_INFO("STATUS=%d",msg->status.status);
+    if(msg->data==0)
+    {
+        goal_reached=false;
 
+    }
+    else
+    {
+        ROS_INFO("GOAL REACHED!");
+        goal_reached=true;
+    }
 }
 //发送小车数据到下位机
 void actuator::sendCarInfoKernel()
@@ -735,9 +753,9 @@ void actuator::pub_9250(){
     imuMsg.angular_velocity.y = gyroY;             
     imuMsg.angular_velocity.z = gyroZ;             
     imuMsg.angular_velocity_covariance = {         
-      0.1,0.0,0.0,
-      0.0,0.1,0.0,
-      0.0,0.0,0.1
+      0.6,0.0,0.0,
+      0.0,0.6,0.0,
+      0.0,0.0,0.6
     };
     
     imuMsg.linear_acceleration.x = accelX;        

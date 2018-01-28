@@ -39,6 +39,8 @@
 #include <std_msgs/Float32.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Int16.h>
+
 //lib
 #include <serial/serial.h>
 #include <time.h>
@@ -83,7 +85,7 @@ public:
      float batteryVoltage;                   //电池电压
 
      int nav_status;                          //导航状态
-
+     bool goal_reached;
 
      float lineTern;                          //车道线转向系数(角度）
      int  vel1;                               //S弯速度
@@ -176,7 +178,7 @@ public:
      void socket_callback(const std_msgs::String::ConstPtr& msg);     //socket回调函数
      void localpath_callback(const nav_msgs::Path::ConstPtr& msg);  
      void teb_control_callback(const ros::TimerEvent&);
-     void movebase_fb_callbcack(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg);
+     void movebase_fb_callbcack(const std_msgs::Int16::ConstPtr& msg);
 };
 
 #endif 

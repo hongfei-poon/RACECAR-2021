@@ -58,6 +58,7 @@
 #include "g2o/solvers/cholmod/linear_solver_cholmod.h"
 
 
+
 // register this planner both as a BaseLocalPlanner and as a MBF's CostmapController plugin
 PLUGINLIB_EXPORT_CLASS(teb_local_planner::TebLocalPlannerROS, nav_core::BaseLocalPlanner)
 PLUGINLIB_EXPORT_CLASS(teb_local_planner::TebLocalPlannerROS, mbf_costmap_core::CostmapController)
@@ -178,6 +179,7 @@ void TebLocalPlannerROS::initialize(std::string name, tf2_ros::Buffer* tf, costm
     // setup callback for custom via-points
     via_points_sub_ = nh.subscribe("via_points", 1, &TebLocalPlannerROS::customViaPointsCB, this);
     
+    GOAL_OR_NOT_pub_=nh.advertise<std_msgs::Int16>("GOAL_OR_NOT",1);
     // initialize failure detector
     ros::NodeHandle nh_move_base("~");
     double controller_frequency = 5;
@@ -460,12 +462,21 @@ uint32_t TebLocalPlannerROS::computeVelocityCommands(const geometry_msgs::PoseSt
 
 bool TebLocalPlannerROS::isGoalReached()
 {
+  int goal_reached_info=0;
+  std_msgs::Int16 goal_reach_msg;
   if (goal_reached_)
   {
     ROS_INFO("GOAL Reached!");
     planner_->clearPlanner();
+    goal_reached_info=1;
+    ROS_INFO("goal_reached_info=%i",goal_reached_info);
+    goal_reach_msg.data=goal_reached_info;
+    GOAL_OR_NOT_pub_.publish(goal_reach_msg);
     return true;
   }
+  ROS_INFO("goal_reached_info=%i",goal_reached_info);
+  goal_reach_msg.data=goal_reached_info;
+  GOAL_OR_NOT_pub_.publish(goal_reach_msg);
   return false;
 }
 
