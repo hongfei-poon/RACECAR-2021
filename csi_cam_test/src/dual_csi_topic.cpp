@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 	int capture_height = 480*4;
 	int display_width = 640;
 	int display_height = 480;
-	int framerate = 15;
+	int framerate = 10;
 	int flip_method = 0;
 
 	ros::init(argc, argv, "image_publisher");
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
 
 	sensor_msgs::ImagePtr msg_left;
 	//sensor_msgs::ImagePtr msg_right;
-	ros::Rate loop_rate(15);//hz
+	ros::Rate loop_rate(10);//hz
 	cv::Mat frameL;
 	//cv::Mat frameR;
 	int count = 0;
