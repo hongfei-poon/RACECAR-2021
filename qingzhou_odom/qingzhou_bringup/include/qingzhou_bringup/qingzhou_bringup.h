@@ -134,6 +134,7 @@ public:
      float w_teb_command;
      float max_vel;
 
+     bool goal_reached;
      int teb_min_pts;
      bool follow_local_planner;
      nav_msgs::Path teb_path;
@@ -159,7 +160,7 @@ public:
      ros::Subscriber sub_socket;      //订阅MFC上位机命令
      ros::Subscriber sub_localpath;        //订阅TEB路径
      ros::Subscriber sub_cv_info;     //订阅cv_control
-
+     ros::Subscriber sub_nav_status; //导航状态
      //发布话题
      ros::Publisher pub_odom;              //发布odom topic
      ros::Publisher pub_imu;               //发布imu topic
@@ -181,6 +182,7 @@ public:
      void teb_control_callback(const ros::TimerEvent&);
 
      void cv_callback(const std_msgs::Int16::ConstPtr&);
+     void move_base_result_callback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
 };
 
 #endif 

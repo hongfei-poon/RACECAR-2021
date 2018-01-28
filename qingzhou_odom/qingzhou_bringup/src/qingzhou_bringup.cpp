@@ -41,6 +41,7 @@ actuator::actuator(ros::NodeHandle handle)
    err_rot_last=0;
    err_trans = 0;
    teb_min_pts = 7;
+   goal_reached=true;
    follow_local_planner=false;
    controller_ang_kp=1.0;
    controller_ang_ki=0.0;
@@ -55,55 +56,6 @@ actuator::actuator(ros::NodeHandle handle)
    w_teb_command=0;
    max_vel=0.7;
    
-
-//    v1 = 0;// 备用
-//    w1 = 0;
-
-//    v2 = 0;//测试专用
-//    w2 = 0;
-
-   angle2 = 0;                //测试专用
-   direction2 = 0;
-   vel2 = 0;
-
-   max_speed = 0.3;
-   max_speed_1 = 0;
-   cv_info = 0;
-
-
-   strcpy(socket_cmd,"pause");
-   memset(&moveBaseControl,0,sizeof(sMartcarControl));
-   
-   handle.param("mcubaudrate",m_baudrate,m_baudrate);                                  
-   handle.param("mcuserialport",m_serialport,std::string("/dev/ttyUSB0"));              
-   handle.param("servo_mid",servo_mid,servo_mid);
-   handle.param("calibrate_lineSpeed",calibrate_lineSpeed,calibrate_lineSpeed);         
-   handle.param("calibrate_angularSpeed",calibrate_angularSpeed,calibrate_angularSpeed);
-   handle.param("ticksPerMeter",ticksPerMeter,ticksPerMeter);                           
-   handle.param("ticksPer2PI",ticksPer2PI,ticksPer2PI); 
-   handle.param("lineTern", lineTern, lineTern);
-   handle.param("vel1", vel1, vel1);
-   handle.param("line_kp",line_kp,line_kp);
-   handle.param("line_kd",line_kd,line_kd);
-   handle.param("line_ki",line_ki,line_ki);
-   handle.param("line_vel",line_vel,line_vel);
-   handle.param("max_vel",max_vel,max_vel);
-   
-   handle.param("teb_min_pts", teb_min_pts, teb_min_pts);
-   handle.param("controller_ang_kp", controller_ang_kp, controller_ang_kp);
-   handle.param("controller_ang_kd", controller_ang_kd, controller_ang_kd);
-   handle.param("controller_ang_ki", controller_ang_ki, controller_ang_ki);
-   handle.param("controller_ang_factor_vel", controller_ang_factor_vel, controller_ang_factor_vel);
-
-   handle.param("controller_vel_kp", controller_vel_kp, controller_vel_kp);
-   handle.param("controller_vel_ki", controller_vel_ki, controller_vel_ki);
-   
-
-//    handle.param("v1", v1, v1);  //备用
-//    handle.param("w1", w1, w1);
-
-//    handle.param("v2", v2, v2);    //测试专用
-//    handle.param("w2", w2, w2);
 
    handle.param("angle2", angle2, angle2);             //测试专用
    handle.param("direction2", direction2, direction2);
@@ -140,6 +92,7 @@ actuator::actuator(ros::NodeHandle handle)
 	sub_line_info = handle.subscribe("line_number_direction", 5, &actuator::line_callback, this);
     sub_socket = handle.subscribe("/dispatcher/cmd",5,&actuator::socket_callback,this);
     sub_cv_info = handle.subscribe("cv_control", 1, &actuator::cv_callback, this);
+    sub_nav_status = handle.subscribe("/move_base/result",1,&actuator::move_base_result_callback,this);
 
     pub_imu = handle.advertise<sensor_msgs::Imu>("raw", 5);	                                                 
     pub_mag = handle.advertise<sensor_msgs::MagneticField>("imu/mag", 5);                                    
@@ -222,6 +175,7 @@ void actuator::localpath_callback(const nav_msgs::Path::ConstPtr& msg)
     num_of_pts=teb_path.poses.size();
     if(num_of_pts==0)
     {
+
         return;
     }
     else
@@ -294,6 +248,7 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
                 else sign = -1;
                 err_trans = c_translation * dx + c_rotation * sign * diff_rot;
                 err_rot = sign * diff_rot;
+                ROS_INFO("NEAR");
             }
             else
             {
@@ -319,7 +274,7 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
                     err_rot=3.13;
                 }
                 
-
+                ROS_INFO("FAR");
                 //ROS_INFO("ERR_TRANS=%f,ERR_ROT=%f",err_trans,err_rot);
             }
             pose_target.pose.orientation.w=cos(err_rot);
@@ -634,7 +589,7 @@ void actuator::sendCarInfoKernel()
 
 	// printf("angle1 in line =[%i] \n",angle1);
 	// printf("direction=[%i]\n",direction);
-	printf("vel_t in line =[%i] \n",vel_t);
+	//printf("vel_t in line =[%i] \n",vel_t);
 
 
     unsigned char buf[23] = {0};
@@ -783,4 +738,11 @@ void actuator::pub_9250(){
       0.0,0.0,0.0
     };
     pub_mag.publish(magMsg);                       //发布magMsg
+}
+
+
+void actuator::move_base_result_callback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg)
+{
+    ROS_INFO("STATUS CALLBACK");
+    ROS_INFO("STATUS: %d", msg->status.status);
 }
