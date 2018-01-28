@@ -237,12 +237,7 @@ class CarDispatcherROS(threading.Thread):
         threading.Thread.__init__(self)
 
         rospy.init_node('Dispatcher',anonymous=True)
-        self.pub_cmd=rospy.Publisher('/dispatcher/cmd',String,queue_size=1)
-        self.pub_path=rospy.Publisher('dispatcher/plan',Path,queue_size=1)
-        self.pub_target=rospy.Publisher('move_base_simple/goal',PoseStamped,queue_size=1)
-        self.pub_initial=rospy.Publisher('/initialpose',PoseWithCovarianceStamped,queue_size=1)
-        self.pub_viapoints_vis=rospy.Publisher('dispatcher/viapoints',PoseArray,queue_size=1)
-        self.pub_ref_model=rospy.Publisher('dispatcher/ref_model',PoseStamed,queue_size=1)
+
         #rospy.logerr("NO SERVICE")
   
        
@@ -268,9 +263,7 @@ class CarDispatcherROS(threading.Thread):
         self.pipe=pipe        
         self.command=String()
         self.command.data='running'
-        self.sub_odom=rospy.Subscriber('/odom',Odometry,self.odom_callback)
-        self.sub_path=rospy.Subscriber('move_base/TebLocalPlannerROS/local_plan',Path,self.path_callback) 
-        
+
         
 
         '''
@@ -356,7 +349,7 @@ class CarDispatcherROS(threading.Thread):
         self.rect_xmin=0.18
         self.rect_ymax=-3.83
         self.rect_ymin=-5.89
-        self.rect_model_vel=0.2
+        self.rect_model_vel=1.0
         self.pth=Path()
         self.pth.header.frame_id='map'
         self.pth_length=self.rect_ymax-self.rect_ymin
@@ -391,8 +384,16 @@ class CarDispatcherROS(threading.Thread):
 
         self.target=PoseStamped()
         self.target.header.frame_id='map'
-        rospy.loginfo("initial_pose:[%f,%f,%f]")
-
+        
+        self.sub_odom=rospy.Subscriber('/odom',Odometry,self.odom_callback)
+        self.sub_path=rospy.Subscriber('move_base/TebLocalPlannerROS/local_plan',Path,self.path_callback) 
+        self.sub_amcl=rospy.Subscriber('/amcl_pose',PoseWithCovarianceStamped,self.amcl_callback)
+        self.pub_cmd=rospy.Publisher('/dispatcher/cmd',String,queue_size=1)
+        self.pub_path=rospy.Publisher('dispatcher/plan',Path,queue_size=1)
+        self.pub_target=rospy.Publisher('move_base_simple/goal',PoseStamped,queue_size=1)
+        self.pub_initial=rospy.Publisher('/initialpose',PoseWithCovarianceStamped,queue_size=1)
+        self.pub_viapoints_vis=rospy.Publisher('dispatcher/viapoints',PoseArray,queue_size=1)
+        self.pub_ref_model=rospy.Publisher('dispatcher/ref_model',PoseStamped,queue_size=1)
 
     def odom_callback(self,odom_data):
         self.odom_msg=odom_data
@@ -428,21 +429,31 @@ class CarDispatcherROS(threading.Thread):
                 #self.pipe.send(('message','vp2-reached'))
 
     def amcl_callback(self,amcl_data):
-        if amcl_data.pose.pose.position.x>self.rect.xmin and amcl_data.pose.pose.position.x<self.rect.xmax and amcl_data.pose.pose.position.y<self.rect.ymax and amcl_data.pose.pose.position.y>self.rect.ymin:
+        rospy.loginfo('amcl')
+        self.pub_path.publish(self.pth)
+        if amcl_data.pose.pose.position.x>self.rect_xmin and amcl_data.pose.pose.position.x<self.rect_xmax and amcl_data.pose.pose.position.y<self.rect_ymax and amcl_data.pose.pose.position.y>self.rect_ymin:
             #rospy.loginfo('S-Path Approaching')
-            if(s_path_approaching=False):
+            if(self.s_path_approaching==False):
                 rospy.loginfo('S-Path Approaching, Reference Model Working')
-                self.s_path_model_time_start=rospy.Time.now()
+                self.s_path_model_time_start=rospy.Time.now().to_sec()
             self.s_path_approaching=True
         else:
             self.s_path_approaching=False
 
     def model_callback(self,event):
-        if(s_path_approaching==True):
-            t=rospy.time.now()-s_path_model_time_start
+        if(self.s_path_approaching==True):
+            t=rospy.Time.now().to_sec()-self.s_path_model_time_start
             if(t<self.rect_time):
-                self.ref_model.pose.position.y=pstart.pose.position.y+t*self.rect_model_vel
-        self.pub_ref_model.publish(self.ref_model)
+                
+                self.ref_model.header.frame_id='map'
+                self.ref_model.pose.position.x=(self.rect_xmax+self.rect_xmin)/2
+                self.ref_model.pose.position.y=self.rect_ymin+t*self.rect_model_vel
+                self.ref_model.pose.orientation.x=0
+                self.ref_model.pose.orientation.y=0
+                self.ref_model.pose.orientation.z=math.sin(math.pi/4)
+                self.ref_model.pose.orientation.w=math.cos(math.pi/4)
+                rospy.loginfo('ref_y=%f',self.ref_model.pose.position.y)
+                self.pub_ref_model.publish(self.ref_model)
 
     def run(self):
         while self.running:
@@ -453,8 +464,8 @@ class CarDispatcherROS(threading.Thread):
                     #print('begin to receive')
                     received=self.pipe.recv()
                     #print('poll:',received)
-                    rospy.loginfo('length=%f',len(self.pth.poses))
-                    self.pub_path.publish(self.pth)
+                
+                    
                     #TODO:
                     self.pub_viapoints_vis.publish(self.viapoints_vis)
                     if received[0]==('cmd','running'):
@@ -543,7 +554,7 @@ if __name__ == "__main__":
 
         (pipe_socket,pipe_ros)=multiprocessing.Pipe()
         car_dispatcher=CarDispatcherROS(pipe_ros)
-        ip=rospy.get_param('ip',default='192.168.31.119')
+        ip=rospy.get_param('ip',default='192.168.31.43')
         port=rospy.get_param('port',default=8888)
         #ip='192.168.68.1'
         #port=6000
