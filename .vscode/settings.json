@@ -1,0 +1,13 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/scut/qingzhou_ws2/devel/lib/python2.7/dist-packages",
+        "/opt/ros/melodic/lib/python2.7/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/scut/qingzhou_ws2/devel/lib/python2.7/dist-packages",
+        "/opt/ros/melodic/lib/python2.7/dist-packages"
+    ],
+    "files.associations": {
+        "cmath": "cpp"
+    }
+}

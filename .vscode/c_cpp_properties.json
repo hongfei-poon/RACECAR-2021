@@ -1,0 +1,40 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/scut/qingzhou_ws2/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/scut/qingzhou_ws2/src/amcl/include/**",
+        "/home/scut/qingzhou_ws2/src/base_local_planner/include/**",
+        "/home/scut/qingzhou_ws2/src/carrot_planner/include/**",
+        "/home/scut/qingzhou_ws2/src/clear_costmap_recovery/include/**",
+        "/home/scut/qingzhou_ws2/src/costmap_2d/include/**",
+        "/home/scut/qingzhou_ws2/src/costmap_converter/include/**",
+        "/home/scut/qingzhou_ws2/src/csi_cam_test/include/**",
+        "/home/scut/qingzhou_ws2/src/dwa_local_planner/include/**",
+        "/home/scut/qingzhou_ws2/src/global_planner/include/**",
+        "/home/scut/qingzhou_ws2/src/qingzhou_odom/imu_calibrate/imu_calib/include/**",
+        "/home/scut/qingzhou_ws2/src/qingzhou_odom/imu_tools/imu_complementary_filter/include/**",
+        "/home/scut/qingzhou_ws2/src/qingzhou_odom/imu_tools/imu_filter_madgwick/include/**",
+        "/home/scut/qingzhou_ws2/src/map_server/include/**",
+        "/home/scut/qingzhou_ws2/src/move_base/include/**",
+        "/home/scut/qingzhou_ws2/src/move_slow_and_clear/include/**",
+        "/home/scut/qingzhou_ws2/src/nav_core/include/**",
+        "/home/scut/qingzhou_ws2/src/navfn/include/**",
+        "/home/scut/qingzhou_ws2/src/qingzhou_odom/qingzhou_bringup/include/**",
+        "/home/scut/qingzhou_ws2/src/qingzhou_odom/robot_pose_ekf/include/**",
+        "/home/scut/qingzhou_ws2/src/rotate_recovery/include/**",
+        "/home/scut/qingzhou_ws2/src/socket/include/**",
+        "/home/scut/qingzhou_ws2/src/teb_local_planner/include/**",
+        "/home/scut/qingzhou_ws2/src/voxel_grid/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}

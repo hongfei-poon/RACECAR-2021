@@ -38,7 +38,6 @@
 #include <geometry_msgs/Point32.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Float32MultiArray.h>
-#include <std_msgs/Int16.h>
 #include <std_msgs/String.h>
 //lib
 #include <serial/serial.h>
@@ -134,7 +133,6 @@ public:
      float w_teb_command;
      float max_vel;
 
-     bool goal_reached;
      int teb_min_pts;
      bool follow_local_planner;
      nav_msgs::Path teb_path;
@@ -148,19 +146,13 @@ public:
      float controller_ang_out;
      float controller_vel_kp,controller_vel_ki;
      float controller_vel_out;
-
-     int cv_info;
-     float max_speed;         //红绿灯速度限幅
-     int max_speed_1;
-
      //订阅话题
      ros::Subscriber sub_move_base;
      ros::Subscriber sub_light_info;  //订阅红绿灯信息
      ros::Subscriber sub_line_info;   //订阅车道线信息
      ros::Subscriber sub_socket;      //订阅MFC上位机命令
      ros::Subscriber sub_localpath;        //订阅TEB路径
-     ros::Subscriber sub_cv_info;     //订阅cv_control
-     ros::Subscriber sub_nav_status; //导航状态
+
      //发布话题
      ros::Publisher pub_odom;              //发布odom topic
      ros::Publisher pub_imu;               //发布imu topic
@@ -180,9 +172,6 @@ public:
      void socket_callback(const std_msgs::String::ConstPtr& msg);     //socket回调函数
      void localpath_callback(const nav_msgs::Path::ConstPtr& msg);  
      void teb_control_callback(const ros::TimerEvent&);
-
-     void cv_callback(const std_msgs::Int16::ConstPtr&);
-     void move_base_result_callback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
 };
 
 #endif 
