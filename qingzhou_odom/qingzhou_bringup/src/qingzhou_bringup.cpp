@@ -45,6 +45,8 @@ actuator::actuator(ros::NodeHandle handle)
    controller_ang_kp=1.0;
    controller_ang_ki=0.0;
    controller_ang_kd=0.0;
+   controller_c_rotation = 1.0;
+   controller_c_translation = 0.5;
    controller_ang_factor_vel=1.0;
    controller_ang_out=0;
    
@@ -67,6 +69,9 @@ actuator::actuator(ros::NodeHandle handle)
    vel2 = 0;
 
 
+
+   
+   test_array.data.resize(10);
    strcpy(socket_cmd,"pause");
    memset(&moveBaseControl,0,sizeof(sMartcarControl));
    
@@ -90,7 +95,8 @@ actuator::actuator(ros::NodeHandle handle)
    handle.param("controller_ang_kd", controller_ang_kd, controller_ang_kd);
    handle.param("controller_ang_ki", controller_ang_ki, controller_ang_ki);
    handle.param("controller_ang_factor_vel", controller_ang_factor_vel, controller_ang_factor_vel);
-
+   handle.param("controller_c_rotation",controller_c_rotation,controller_c_rotation); 
+   handle.param("controller_c_translation",controller_c_translation,controller_c_translation);       
    handle.param("controller_vel_kp", controller_vel_kp, controller_vel_kp);
    handle.param("controller_vel_ki", controller_vel_ki, controller_vel_ki);
    
@@ -138,7 +144,7 @@ actuator::actuator(ros::NodeHandle handle)
     pub_odom = handle.advertise<nav_msgs::Odometry>("odom", 5);                                               
     pub_battery = handle.advertise<std_msgs::Float32>("battery",10);                                          
     pub_targetpt = handle.advertise<geometry_msgs::PoseStamped>("target_point",1);
-
+    pub_test = handle.advertise<std_msgs::Float32MultiArray>("bringup/test",1);
     timer_teb_control = handle.createTimer(ros::Duration(0.05),&actuator::teb_control_callback,this);
 }
 
@@ -153,7 +159,8 @@ void actuator::callback_move_base(const geometry_msgs::Twist::ConstPtr &msg) //�
    memset(&moveBaseControl,0,sizeof(sMartcarControl));                       //清零movebase数据存储区
    v_teb_command = msg->linear.x;                                                  //move_base算得的线速度
    w_teb_command = msg->angular.z;                                               //move_base算得的角速度
-   
+
+
 
 }
   
@@ -162,7 +169,8 @@ void actuator::localpath_callback(const nav_msgs::Path::ConstPtr& msg)
 {
 
     int num_of_pts=0;
-    ROS_INFO("HEAR PATH,%d",num_of_pts);
+    int target_index=0;
+    //ROS_INFO("HEAR PATH,%d",num_of_pts);
     //ROS_INFO("MIN PTS,%d",teb_min_pts);
     teb_path=*msg;
     num_of_pts=teb_path.poses.size();
@@ -176,6 +184,8 @@ void actuator::localpath_callback(const nav_msgs::Path::ConstPtr& msg)
         vel_rot.resize(num_of_pts);
         for(int i=0;i<num_of_pts-1;i++)
         {
+            
+            
             float dt=teb_path.poses[i+1].header.stamp.toSec()-teb_path.poses[i].header.stamp.toSec();
             float yaw1=atan2(teb_path.poses[i+1].pose.orientation.z,teb_path.poses[i+1].pose.orientation.w);
             float yaw0=atan2(teb_path.poses[i].pose.orientation.z,teb_path.poses[i].pose.orientation.w);
@@ -193,11 +203,22 @@ void actuator::localpath_callback(const nav_msgs::Path::ConstPtr& msg)
     if(num_of_pts<teb_min_pts) 
     {
         follow_local_planner=true;
+        target_index=num_of_pts-1;
+        ROS_INFO("GOAL APPROACHING");
     }
     else
     {
+        target_index=teb_min_pts-1;
         follow_local_planner=false;
 
+    }
+    try
+    {
+        tf_listener.transformPose("base_link",ros::Time(0),teb_path.poses[target_index],"odom",pose_target);
+    }
+    catch(tf::TransformException &ex)
+    {
+        ROS_ERROR("%s",ex.what());
     }
     
 }
@@ -206,115 +227,130 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
 {
     //ROS_INFO("TIMERCB");
     int num_of_pts=teb_path.poses.size();
+
+
     
-    if(num_of_pts>0)
+    float dx=pose_target.pose.position.x;
+    float dy=pose_target.pose.position.y;
+    float diff_rot = 0;
+    float diff_trans = 0;
+    if(diff_rot<-3.13)
     {
-        follow_local_planner=false;
-        int target_index=teb_min_pts-2;
-        try
-        {
-            
-            tf_listener.transformPose("base_link",ros::Time(0),teb_path.poses[target_index],"odom",pose_target);
-            float dx=pose_target.pose.position.x;
-            float dy=pose_target.pose.position.y;
-            float diff_rot = 0;
-            float diff_trans = 0;
-            if(diff_rot<-3.13)
-            {
-                diff_rot=-3.13;
+        diff_rot=-3.13;
 
-            }
-            if(diff_rot>3.13)
-            {
-                diff_rot=3.13;
-            }
-
-            if(follow_local_planner)
-            {
-                
-                diff_rot = 2*atan2(pose_target.pose.orientation.z,pose_target.pose.orientation.w);
-                diff_trans = sqrt(dx * dx + dy * dy);
-
-
-
-                int sign = 1;
-                float c_rotation = 1.0;
-                float c_translation = 0.5;
-                if(dx > 0) sign = 1;
-                else if(dx == 0) sign = 0;
-                else sign = -1;
-                err_trans = c_translation * dx + c_rotation * sign * diff_rot;
-                err_rot = sign * diff_rot;
-                ROS_INFO("NEAR");
-            }
-            else
-            {
-                //err_trans=sqrt(dx*dx+dy*dy);
-                int sign=1;
-                diff_rot = atan2(dy,dx);
-                diff_trans = sqrt(dx * dx + dy * dy);
-                
-                
-                if(dx>0) 
-                {
-                    sign=1;
-                }
-                else if(dx==0)
-                { 
-                    sign=0;
-                }
-                else 
-                {
-                    ROS_INFO("ROTATION=%f",diff_rot);
-                    sign = -1;
-                    if(diff_rot>0)
-                    {
-                        diff_rot-=3.1415926535;
-
-                    }   
-                    else if(diff_rot==0)
-                    {
-                        diff_rot=diff_rot;
-                    }
-                    else
-                    {
-                        diff_rot+=3.1415926535;
-                    }
-                }
-                err_trans = sign*diff_trans;
-                err_rot = sign*diff_rot;
-
-                if(err_rot<-3.13)
-                {
-                    err_rot=-3.13;
-
-                }
-                if(err_rot>3.13)
-                {
-                    err_rot=3.13;
-                }
-                
-                ROS_INFO("FAR,dx=%f,dy=%f,dyaw=%f,err_rot=%f,sign=%d",dx,dy,diff_rot,err_rot,sign);
-                //ROS_INFO("ERR_TRANS=%f,ERR_ROT=%f",err_trans,err_rot);
-            }
-            pose_target.pose.orientation.w=cos(err_rot);
-            pose_target.pose.orientation.z=sin(err_rot);
-            pub_targetpt.publish(pose_target);
-        }
-        catch(tf::TransformException &ex)
-        {
-            ROS_ERROR("%s",ex.what());
-        }
+    }
+    else;
+    if(diff_rot>3.13)
+    {
+        diff_rot=3.13;
+    }
+    else;
+    if(num_of_pts==0)
+    {
+        diff_rot=0;
+        diff_trans=0;
+        dx=0;
+        dy=0;
     }
     else
     {
-        follow_local_planner=true;
+        if(follow_local_planner==false)
+        {
+            
+            ROS_INFO("FAR");
+            // if(follow_local_planner)
+            // {
+                
+            //     diff_rot = 2*atan2(pose_target.pose.orientation.z,pose_target.pose.orientation.w);
+            //     diff_trans = sqrt(dx * dx + dy * dy);
+            //     int sign = 1;
+            //     float c_rotation = 1.0;
+            //     float c_translation = 0.5;
+            //     if(dx > 0) sign = 1;
+            //     else if(dx == 0) sign = 0;
+            //     else sign = -1;
+            //     err_trans = c_translation * dx + c_rotation * sign * diff_rot;
+            //     err_rot = sign * diff_rot;
+            //     ROS_INFO("NEAR");
+            // }
+
+            //err_trans=sqrt(dx*dx+dy*dy);
+            int sign=1;
+            diff_rot = atan2(dy,dx);
+            diff_trans = sqrt(dx * dx + dy * dy);
+            
+            
+            if(dx>0) 
+            {
+                sign=1;
+            }
+            else if(dx==0)
+            { 
+                sign=0;
+            }
+            else 
+            {
+                //ROS_INFO("ROTATION=%f",diff_rot);
+                sign = -1;
+                if(diff_rot>0)
+                {
+                    diff_rot-=3.1415926535;
+
+                }   
+                else if(diff_rot==0)
+                {
+                    diff_rot=diff_rot;
+                }
+                else
+                {
+                    diff_rot+=3.1415926535;
+                }
+            }
+            err_trans = sign*diff_trans;
+            err_rot = sign*diff_rot;
+
+            if(err_rot<-3.13)
+            {
+                err_rot=-3.13;
+
+            }
+            if(err_rot>3.13)
+            {
+                err_rot=3.13;
+            }
+            
+            //ROS_INFO("FAR,dx=%f,dy=%f,dyaw=%f,err_rot=%f,sign=%d",dx,dy,diff_rot,err_rot,sign);
+            //ROS_INFO("ERR_TRANS=%f,ERR_ROT=%f",err_trans,err_rot);
+
+        }
+        else
+        {
+            diff_rot = 2*atan2(pose_target.pose.orientation.z,pose_target.pose.orientation.w);
+            diff_trans = sqrt(dx * dx + dy * dy);
+            int sign = 1;
+
+            if(dx > 0) sign = 1;
+            else if(dx == 0) sign = 0;
+            else sign = -1;
+            err_trans = controller_c_translation * dx + sign * fabs(controller_c_rotation * diff_rot);
+            err_rot = sign * diff_rot;           
+            ROS_INFO("NEAR,err_trans=%f,err_rot=%f,dx=%f,dy=%f",err_trans,err_rot,dx,dy);
+            test_array.data[0]=err_rot;
+            test_array.data[1]=err_trans;
+            test_array.data[3]=moveBaseControl.TargetSpeed;            
+        }
+
+
+
+        //pose_target.pose.orientation.w=cos(err_rot);
+        //pose_target.pose.orientation.z=sin(err_rot);
+        pub_targetpt.publish(pose_target);
     }
 
     if(nav_status==NAVIGATION)
     {
         controller_ang_out=err_rot*controller_ang_kp+(err_rot-err_rot_last)*controller_ang_kd/20.0;
-        controller_ang_out=controller_ang_out/(car_odom.twist.twist.linear.x*controller_ang_factor_vel+0.3);
+        controller_ang_out=controller_ang_out/(fabs(car_odom.twist.twist.linear.x)*controller_ang_factor_vel+0.3);
         err_rot_last=err_rot;
         controller_vel_out=controller_vel_kp*err_trans/20.0;
         if(controller_vel_out>max_vel)
@@ -326,23 +362,23 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
         //ROS_INFO("VEL=%f",controller_vel_out);
         //ROS_INFO("ERR_ROT=%f",err_rot);
         //ROS_INFO("FOLLOW=%d",follow_local_planner);
-        if(!follow_local_planner)
-        {
-            moveBaseControl.TargetSpeed = controller_vel_out*32/0.43;                                  //计算目标线速度
+        //if(!follow_local_planner)
+        //{
+        moveBaseControl.TargetSpeed = controller_vel_out*32/0.43;                                  //计算目标线速度
            
-    //    moveBaseControl.TargetAngle = round(w*0.8*180/3.14159);
-    //    moveBaseControl.TargetAngle = round(atan(w*CARL/v)*57.3);                 //计算目标角度
-            moveBaseControl.TargetAngle = round(controller_ang_out*57.3);
+            //moveBaseControl.TargetAngle = round(w*0.8*180/3.14159);
+            //moveBaseControl.TargetAngle = round(atan(w*CARL/v)*57.3);                 //计算目标角度
+        moveBaseControl.TargetAngle = round(controller_ang_out*57.3);
             //ROS_INFO("COMMAND");
-            moveBaseControl.TargetAngle+=servo_mid;                                          //stm32 program has subtract 60
-        }
-        else
-        {
-            moveBaseControl.TargetAngle = round(w_teb_command*57.3);
-            moveBaseControl.TargetAngle+=servo_mid;
-            moveBaseControl.TargetSpeed = v_teb_command*32/0.43; 
-            //ROS_INFO("PID");
-        }
+        moveBaseControl.TargetAngle+=servo_mid;                                          //stm32 program has subtract 60
+        //}
+        // else
+        // {
+        //     moveBaseControl.TargetAngle = round(w_teb_command*57.3);
+        //     moveBaseControl.TargetAngle+=servo_mid;
+        //     moveBaseControl.TargetSpeed = v_teb_command*32/0.43; 
+        //     //ROS_INFO("PID");
+        // }
         
         if(light_info==1)
         {
@@ -366,6 +402,8 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
         moveBaseControl.TargetAngle += servo_mid;
         moveBaseControl.TargetSpeed = line_vel*32/0.43;         
     }
+
+    pub_test.publish(test_array);
     sendCarInfoKernel();   
 }
 void actuator::run()

@@ -126,7 +126,7 @@ public:
      //msg
      sMartcarControl  moveBaseControl;          
      std_msgs::Float32  currentBattery;          
-     
+     std_msgs::Float32MultiArray test_array;
      //teb trajectory controller
      
      float v_teb_command;
@@ -143,6 +143,7 @@ public:
      geometry_msgs::PoseStamped pose_target;
      ros::Timer timer_teb_control;
      float controller_ang_kp,controller_ang_ki,controller_ang_kd,controller_ang_factor_vel;
+     float controller_c_translation,controller_c_rotation;
      float controller_ang_out;
      float controller_vel_kp,controller_vel_ki;
      float controller_vel_out;
@@ -159,6 +160,7 @@ public:
      ros::Publisher pub_mag;               //发布磁力计 topic
      ros::Publisher pub_battery;           //发布电池 topic
      ros::Publisher pub_targetpt;
+     ros::Publisher pub_test;
      //坐标变换
      tf::TransformListener tf_listener;
 

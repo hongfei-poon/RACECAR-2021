@@ -23,11 +23,13 @@
       <param name="controller_ang_kp" value="1.7"/>
       <param name="controller_ang_ki" value="0.0"/>
       <param name="controller_ang_kd" value="0.9"/>
+      <param name="controller_c_translation" value="0.5"/>
+      <param name="controller_c_rotation" value="0.2"/>
       <param name="controller_ang_factor_vel" value="3.0"/>
       <param name="controller_vel_kp" value="24.0"/><!--28-->
       <param name="controller_vel_ki" value="0.0"/>
       <param name="max_vel" value="0.8"/>
-      <param name="teb_min_pts" value="5"/>
+      <param name="teb_min_pts" value="5"/><!--5-->
       <!-- angle=60:中位。angle=87：左最大。angle=29：右最大。 -->
       <!-- vel_t=74:前进最大速度。vel_t=-74：后退最大速度 -->
       <!-- 转弯半径：左0.75；右0.8. -->
