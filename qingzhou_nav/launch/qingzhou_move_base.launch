@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<launch>
+  <master auto="start"/>
+
+  <include file="$(find qingzhou_nav)/launch/ydlidar.launch" />
+  <node name="map_server" pkg="map_server" type="map_server" args="/home/scut/map.yaml" output="screen"/>
+  <!-- <node name="map_server" pkg="map_server" type="map_server" args="/home/scut/map.yaml" output="screen"/> -->
+  <!-- <node name="map_server" pkg="map_server" type="map_server" args="$(find qingzhou_nav)/maps/map2.yaml" output="screen"/> -->
+
+  <include file="$(find qingzhou_nav)/launch/amcl.launch" />
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+ 	  
+    <param name="base_global_planner" value="global_planner/GlobalPlanner" />
+
+    <param name="planner_frequency" value="0.01" />
+    <param name="planner_patience" value="5.0" />
+
+    <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+    
+    <!-- <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" /> -->
+    <param name="controller_frequency" value="10.0" />
+    <param name="controller_patience" value="5.0" />
+
+    <rosparam file="$(find qingzhou_nav)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find qingzhou_nav)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find qingzhou_nav)/config/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find qingzhou_nav)/config/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find qingzhou_nav)/config/teb_local_planner_params.yaml" command="load" />
+    <!-- <rosparam file="$(find qingzhou_nav)/config/dwa_local_planner_params.yaml" command="load" />  -->
+    <rosparam file="$(find qingzhou_nav)/config/global_planner_params.yaml" command="load" />
+    
+    <!--    <remap from="/odom" to="/odom_ekf"/> --> 
+  </node>
+
+  <!--include file="$(find qingzhou_nav)/launch/line.launch" /-->
+	<!--include file="$(find qingzhou_nav)/launch/light.launch" /-->
+	<!-- <include file="$(find qingzhou_nav)/launch/csi_cam_test.launch" /> -->    <!--line+light+cv_control-->
+
+
+
+  <!-- <node pkg="dispatcher" name="dispatcher" type="dispatcher.py" > -->
+    <!-- <param name="ip" value="192.168.1.101"/> -->
+    <!-- <param name="port" value="8888"/> -->
+  <!-- </node> -->
+</launch>

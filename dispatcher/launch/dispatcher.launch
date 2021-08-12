@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="dispatcher" name="dispatcher" type="dispatcher.py" output="screen"> 
+        <param name='ip' value='192.168.3.190'/>
+        <param name='port' value= '8888'/>
+    </node>
+</launch>

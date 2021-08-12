@@ -1,0 +1,14 @@
+<launch>
+    <node pkg="csi_cam_test" type="dual_csi_cam" name="image_publisher" output="screen">
+      <param name="capture_width" value="3264"/>
+      <param name="capture_height" value="2464"/>
+      <param  name="display_width" value="640"/>
+      <param name="display_height" value="480"/>
+      <param name="framerate" value="7"/>
+      <param name="flip_method" value="0"/>
+    </node>
+<!--    <node pkg="csi_cam_test" type="imglight_to_traffic.py" name="traffic_light" output="screen">-->
+<!--    </node>-->
+    <!-- <node pkg="csi_cam_test" type="img2line.py" name="find_line" output="screen">
+    </node> -->
+</launch>

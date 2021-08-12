@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<launch>
+    <!-- <node pkg="csi_cam_test" type="dual_csi_cam" name="image_publisher" output="screen">
+      <param name="capture_width" value="3264"/>
+      <param name="capture_height" value="2464"/>
+      <param  name="display_width" value="64"/>
+      <param name="display_height" value="48"/>
+      <param name="framerate" value="11"/>
+      <param name="flip_method" value="0"/>
+    </node>
+    <node pkg="csi_cam_test" type="imglight_to_traffic.py" name="traffic_light" output="screen">  
+    </node>
+    <node pkg="csi_cam_test" type="_51compressimg.py" name="compress" output="screen">
+    </node> -->
+    <!-- <node pkg="csi_cam_test" type="img2line.py" name="find_line" output="screen">
+    </node> -->
+    <node pkg="csi_cam_test" type="vision_controller.py" name="vision_controller" output="screen">
+        <param name="lightx1" value="2.25"/>
+<!--        红绿灯模块开启x坐标-->
+        <param name="lightx2" value="0.755"/>
+<!--        红绿灯模块结束x坐标-->
+        <param name="lighty1" value="-5.02"/>
+<!--        红绿灯模块开始y坐标-->
+        <param name="lighty2" value="-7.65"/>
+        <!--        红绿灯模块结束y坐标-->
+<!--        <param name="linex1" value="1.7"/>-->
+        <param name="linex2" value="0.131"/>    <!--车道线启动区间-->
+        <param name="linex3" value="1.108"/>
+<!--        <param name="liney1" value="-1.1"/>-->
+        <param name="liney2" value="-5.045"/>
+        <param name="liney3" value="-4.037"/>
+
+
+        <param name="linex4" value="-2.75"/>      <!--车道线停止区间-->
+        <param name="linex5" value="-1.83"/>
+        <param name="liney4" value="-1.30"/>
+        <param name="liney5" value="0.322"/>
+
+    </node>
+</launch>

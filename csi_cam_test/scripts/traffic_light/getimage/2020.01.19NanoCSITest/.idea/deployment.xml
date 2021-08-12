@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="learningx@192.168.43.152:22">
+    <serverData>
+      <paths name="172.27.155.2">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/learningx/Documents/2020.01.19NanoCSITest" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="learningx@192.168.43.152:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/learningx/Documents/2020.01.19NanoCSITest" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="scw4150@39.155.169.121:2211">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
