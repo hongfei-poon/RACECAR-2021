@@ -503,16 +503,16 @@ if __name__ == "__main__":
             elif key=='A' or key=='a':
                 car_dispatcher.clearing_request()
                 rospy.loginfo('clearing costmap')
-            elif key=='P' or key=='p':
-                global_plan=car_dispatcher.plan_request(car_dispatcher.unloading_point,car_dispatcher.waiting_point,0.1)
+            # elif key=='P' or key=='p':
+            #     global_plan=car_dispatcher.plan_request(car_dispatcher.unloading_point,car_dispatcher.waiting_point,0.1)
                 
-                global_plan.plan.header.stamp=rospy.Time.now()
-                global_plan.plan.header.frame_id='map'
-                print(global_plan.plan.header)
-                car_dispatcher.pub_target.publish(car_dispatcher.loading_point)  
-                car_dispatcher.pub_path.publish(global_plan.plan)
+            #     global_plan.plan.header.stamp=rospy.Time.now()
+            #     global_plan.plan.header.frame_id='map'
+            #     print(global_plan.plan.header)
+            #     car_dispatcher.pub_target.publish(car_dispatcher.loading_point)  
+            #     car_dispatcher.pub_path.publish(global_plan.plan)
                 
-                rospy.loginfo('make plan')
+            #     rospy.loginfo('make plan')
                 
         sock_client.join()
         car_dispatcher.join()

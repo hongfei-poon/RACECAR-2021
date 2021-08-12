@@ -220,6 +220,30 @@ void actuator::localpath_callback(const nav_msgs::Path::ConstPtr& msg)
     //ROS_INFO("MIN PTS,%d",teb_min_pts);
     teb_path=*msg;
     num_of_pts=teb_path.poses.size();
+    if(num_of_pts==0)
+    {
+        return;
+    }
+    else
+    {
+        vel_trans.resize(num_of_pts);
+        vel_rot.resize(num_of_pts);
+        for(int i=0;i<num_of_pts-1;i++)
+        {
+            float dt=teb_path.poses[i+1].header.stamp.toSec()-teb_path.poses[i].header.stamp.toSec();
+            float yaw1=atan2(teb_path.poses[i+1].pose.orientation.z,teb_path.poses[i+1].pose.orientation.w);
+            float yaw0=atan2(teb_path.poses[i].pose.orientation.z,teb_path.poses[i].pose.orientation.w);
+            vel_rot[i]=(yaw1-yaw0)/dt;
+            
+            float x0=teb_path.poses[i].pose.position.x; float y0=teb_path.poses[i].pose.position.y;
+            float x1=teb_path.poses[i+1].pose.position.x; float y1=teb_path.poses[i+1].pose.position.y;
+            float dx=x0-x1;float dy=y0-y1;
+            float dist=sqrt(dx*dx+dy*dy);
+            vel_trans[i]=dist/dt;
+        }
+    }
+
+    
     if(num_of_pts<teb_min_pts) 
     {
         follow_local_planner=true;
@@ -227,23 +251,7 @@ void actuator::localpath_callback(const nav_msgs::Path::ConstPtr& msg)
     else
     {
         follow_local_planner=false;
-        //follow_local_planner=false;
-        //vel_trans.resize(num_of_pts);
-        //vel_rot.resize(num_of_pts);
 
-        // for(int i=0;i<num_of_pts-1;i++)
-        // {
-        //     float dt=teb_path[i+1].header.stamp-teb_path[i].header.stamp;
-        //     float yaw1=atan2(teb_path.poses[i+1].orientation.z,teb_path.poses[i+1].orientation.w);
-        //     float yaw0=atan2(teb_path.poses[i].orientation.z,teb_path.poses[i].orientation.w);
-        //     vel_rot[i]=(yaw1-yaw0)/dt;
-            
-        //     float x0=teb_path.poses[i].position.x; float y0=teb_path.poses[i].position.y;
-        //     float x1=teb_path.poses[i+1].position.x; float y1=teb_path.poses[i+1].position.y;
-        //     float dx=x0-x1;float dy=y0-y1;
-        //     float dist=sqrt(dx*dx+dy*dy);
-        //     vel_trans[i]=dist/dt;
-        // }
     }
     
 }
@@ -259,29 +267,63 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
         int target_index=teb_min_pts-2;
         try
         {
-            teb_path.poses[target_index].pose.orientation.x=0;
-            teb_path.poses[target_index].pose.orientation.y=0;
-            teb_path.poses[target_index].pose.orientation.z=0;
-            teb_path.poses[target_index].pose.orientation.w=1;
             
             tf_listener.transformPose("base_link",ros::Time(0),teb_path.poses[target_index],"odom",pose_target);
-            float dx=pose_target.pose.position.x;float dy=pose_target.pose.position.y;
-            
-            err_trans=sqrt(dx*dx+dy*dy);
-            err_rot = atan2(dy,dx);
-            if(err_rot<-3.13)
+            float dx=pose_target.pose.position.x;
+            float dy=pose_target.pose.position.y;
+            if(follow_local_planner)
             {
-                err_rot=-3.13;
+                float diff_rot = 2*atan2(pose_target.pose.orientation.z,pose_target.pose.orientation.w);
 
+                if(diff_rot<-3.13)
+                {
+                    diff_rot=-3.13;
+
+                }
+                if(diff_rot>3.13)
+                {
+                    diff_rot=3.13;
+                }
+
+
+                int sign = 1;
+                float c_rotation = 1.0;
+                float c_translation = 0.5;
+                if(dx > 0) sign = 1;
+                else if(dx == 0) sign = 0;
+                else sign = -1;
+                err_trans = c_translation * dx + c_rotation * sign * diff_rot;
+                err_rot = sign * diff_rot;
             }
-            if(err_rot>3.13)
+            else
             {
-                err_rot=3.13;
-            }
+                //err_trans=sqrt(dx*dx+dy*dy);
+                int sign=1;
 
+                float diff_trans = sqrt(dx * dx + dy * dy);
+                
+                if(dx>0) sign=1;
+                else if(dx==0) sign=0;
+                else sign = -1;
+
+                err_trans = sign*diff_trans;
+                err_rot = sign*atan2(dy,dx);
+
+                if(err_rot<-3.13)
+                {
+                    err_rot=-3.13;
+
+                }
+                if(err_rot>3.13)
+                {
+                    err_rot=3.13;
+                }
+                
+
+                //ROS_INFO("ERR_TRANS=%f,ERR_ROT=%f",err_trans,err_rot);
+            }
             pose_target.pose.orientation.w=cos(err_rot);
             pose_target.pose.orientation.z=sin(err_rot);
-            //ROS_INFO("ERR_TRANS=%f,ERR_ROT=%f",err_trans,err_rot);
             pub_targetpt.publish(pose_target);
         }
         catch(tf::TransformException &ex)
@@ -377,7 +419,7 @@ void actuator::run()
 	currentBattery.data = batteryVoltage;            
 	pub_battery.publish(currentBattery);             
 
-    #if 1
+   
 	if(encoderLeft > 220 || encoderLeft < -220) encoderLeft = 0;
 	if(encoderRight > 220 || encoderRight < -220) encoderRight = 0;
         //encoderLeft = -encoderLeft;
@@ -460,7 +502,7 @@ void actuator::run()
 		}
 	pub_odom.publish(odom);                                                            
 	car_odom=odom;
-#endif
+
     rate.sleep();
     }
 }
@@ -581,7 +623,7 @@ void actuator::sendCarInfoKernel()
 	  //vel_t = vel1 ;
 	//}
 	
-//direction = direction2;      //测试专用
+    //direction = direction2;      //测试专用
     // angle1 = angle2 * line_info + 63;
 	//angle1 = 63;
      //vel_t = vel2;
