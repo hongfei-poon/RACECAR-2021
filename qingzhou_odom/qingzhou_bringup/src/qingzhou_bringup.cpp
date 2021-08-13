@@ -114,53 +114,7 @@ void actuator::callback_move_base(const geometry_msgs::Twist::ConstPtr &msg) //�
    memset(&moveBaseControl,0,sizeof(sMartcarControl));                       //清零movebase数据存储区
    v_teb_command = msg->linear.x;                                                  //move_base算得的线速度
    w_teb_command = msg->angular.z;                                               //move_base算得的角速度
-
-//    if (light_info == 1)       //判断红绿灯(备用)  
-//    {
-// 	   v = 0;
-// 	   w = 0;
-//    }
-//    else
-//    {
-// 	   v = v;
-// 	   w = w;
-//    }
-
-
-//    if (line_info == 0)    //跟随车道线(备用)
-//    {
-// 	   w = w;
-// 	   v = v;
-//    }
-//    else
-//    {
-// 	   v = v1;
-// 	   w = w1;
-//    }
-
-   //w = w2;                 //测试专用
-   //v = v2;
-
-//    if(!follow_local_planner)
-//    {
-        // moveBaseControl.TargetSpeed = v*32/0.43;                                  //计算目标线速度
-//    moveBaseControl.TargetAngle = round(w*0.8*180/3.14159);
-//    moveBaseControl.TargetAngle = round(atan(w*CARL/v)*57.3);                 //计算目标角度
-//    moveBaseControl.TargetAngle = round(w*57.3);
-        // if(moveBaseControl.TargetAngle>15)
-//    {
-//        moveBaseControl.TargetAngle=-15;
-
-//    }
-//    else if(moveBaseControl.TargetAngle<-15)
-//    {
-//        moveBaseControl.TargetAngle=15;       
-
-//    }
-        // moveBaseControl.TargetAngle+=63;                                          //stm32 program has subtract 60
-//    }
-   //printf("teb command:%.2f,%.2f,%d,%d \n",msg->linear.x,msg->angular.z,                  
-	//       abs(moveBaseControl.TargetSpeed),abs(moveBaseControl.TargetAngle));	   
+   
 
 }
   
@@ -169,7 +123,7 @@ void actuator::localpath_callback(const nav_msgs::Path::ConstPtr& msg)
 {
 
     int num_of_pts=0;
-    //ROS_INFO("HEAR PATH,%d",num_of_pts);
+    ROS_INFO("HEAR PATH,%d",num_of_pts);
     //ROS_INFO("MIN PTS,%d",teb_min_pts);
     teb_path=*msg;
     num_of_pts=teb_path.poses.size();
@@ -215,7 +169,7 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
     //ROS_INFO("TIMERCB");
     int num_of_pts=teb_path.poses.size();
     
-    if(num_of_pts>teb_min_pts)
+    if(num_of_pts>0)
     {
         follow_local_planner=false;
         int target_index=teb_min_pts-2;
