@@ -2,14 +2,14 @@
 #-*- coding:utf-8 -*-
 
 
-#×°»õÇø: (2.13,-3.31,-90)
+#×°ï¿½ï¿½ï¿½ï¿½: (2.13,-3.31,-90)
 #viapoint1: (-0.22,-8.13,-180)#
 
-#Ð¶»õÇø: (-2.57,-6.23,90)
-#viapoint2: (0.82,-5.46,90)  #³µµÀÏßÈë¿ÚÇ°1.5m
-#viapoint3: (0.82,-4.43,90)  #³µµÀÏßÈë¿Ú
+#Ð¶ï¿½ï¿½ï¿½ï¿½: (-2.57,-6.23,90)
+#viapoint2: (0.82,-5.46,90)  #ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°1.5m
+#viapoint3: (0.82,-4.43,90)  #ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-#ºìÂÌµÆy: -5.19->-6.49
+#ï¿½ï¿½ï¿½Ìµï¿½y: -5.19->-6.49
 
 import os
 import sys
@@ -251,13 +251,17 @@ class CarDispatcherROS(threading.Thread):
         self.pub_target=rospy.Publisher('move_base_simple/goal',PoseStamped,queue_size=1)
         self.pub_initial=rospy.Publisher('/initialpose',PoseWithCovarianceStamped,queue_size=1)
         self.pub_viapoints_vis=rospy.Publisher('dispatcher/viapoints',PoseArray,queue_size=1)
-        
+        self.pub_ref_model=rospy.Publisher('dispatcher/ref_model',PoseStamed,queue_size=1)
         #rospy.logerr("NO SERVICE")
   
        
         rospy.wait_for_service("move_base/clear_costmaps")
 
         self.clearing_request = rospy.ServiceProxy("move_base/clear_costmaps",Empty)
+        self.timer_model = rospy.Timer(rospy.Duration(0.1),self.model_callback)
+        self.s_path_model_time_start=0
+
+
         
 
         rospy.loginfo("services established!")
@@ -289,7 +293,8 @@ class CarDispatcherROS(threading.Thread):
         '''
         self.nav_status=-1
 
-
+        self.s_path_approaching=False
+        
         self.reach_status=False
 
 
@@ -360,8 +365,12 @@ class CarDispatcherROS(threading.Thread):
         self.rect_xmin=0.18
         self.rect_ymax=-3.83
         self.rect_ymin=-5.89
+        self.rect_model_vel=0.2
         self.pth=Path()
         self.pth.header.frame_id='map'
+        self.pth_length=self.rect_ymax-self.rect_ymin
+        self.rect_time=self.pth_length/self.rect_model_vel
+        
         pstart=PoseStamped()
         pstart.pose.position.x=(self.rect_xmin+self.rect_xmax)/2
         pstart.pose.position.y=self.rect_ymin
@@ -376,7 +385,7 @@ class CarDispatcherROS(threading.Thread):
         pend.pose.orientation.w=math.cos(math.pi/4)
         self.pth.poses.append(pstart)
         step_y=(pend.pose.position.y-pstart.pose.position.y)/num_pts
-
+        
         p=PoseStamped()
         for i in range(num_pts):
             p.pose.position.y=(i+1)*step_y+pstart.pose.position.y
@@ -385,7 +394,9 @@ class CarDispatcherROS(threading.Thread):
             self.pth.poses.append(p)
         self.pth.poses.append(pend) 
 
-        
+        self.ref_model=PoseStamped()
+        self.ref_model.pose.position=pstart.pose.position
+        self.ref_model.pose.orientation=pstart.pose.orientation     
 
         self.target=PoseStamped()
         self.target.header.frame_id='map'
@@ -424,6 +435,23 @@ class CarDispatcherROS(threading.Thread):
                 self.pub_target.publish(self.target)  
                 rospy.loginfo("reach p2")    
                 #self.pipe.send(('message','vp2-reached'))
+
+    def amcl_callback(self,amcl_data):
+        if amcl_data.pose.pose.position.x>self.rect.xmin and amcl_data.pose.pose.position.x<self.rect.xmax and amcl_data.pose.pose.position.y<self.rect.ymax and amcl_data.pose.pose.position.y>self.rect.ymin:
+            #rospy.loginfo('S-Path Approaching')
+            if(s_path_approaching=False):
+                rospy.loginfo('S-Path Approaching, Reference Model Working')
+                self.s_path_model_time_start=rospy.Time.now()
+            self.s_path_approaching=True
+        else:
+            self.s_path_approaching=False
+
+    def model_callback(self,event):
+        if(s_path_approaching==True):
+            t=rospy.time.now()-s_path_model_time_start
+            if(t<self.rect_time):
+                self.ref_model.pose.position.y=pstart.pose.position.y+t*self.rect_model_vel
+        self.pub_ref_model.publish(self.ref_model)
 
     def run(self):
         while self.running:
@@ -503,7 +531,7 @@ class CarDispatcherROS(threading.Thread):
         print('CarDispatcherROS Thread Exit\n')
         os._exit(0)        
 
-
+    
 
 
 def readkey(getchar_fn=None):
