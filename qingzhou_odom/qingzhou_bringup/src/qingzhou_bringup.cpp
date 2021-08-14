@@ -50,6 +50,9 @@ actuator::actuator(ros::NodeHandle handle)
    controller_ang_factor_vel=1.0;
    controller_ang_out=0;
    
+   follow_model=false;
+
+
    controller_vel_kp=1.0;
    controller_vel_ki=0;
    controller_vel_out;
@@ -134,12 +137,12 @@ actuator::actuator(ros::NodeHandle handle)
 	sub_light_info = handle.subscribe("light_control", 5, &actuator::light_callback, this);
     sub_localpath = handle.subscribe("/move_base/TebLocalPlannerROS/local_plan",1,&actuator::localpath_callback,this);
     sub_nav_status = handle.subscribe("/move_base/TebLocalPlannerROS/GOAL_OR_NOT",1,&actuator::movebase_fb_callbcack,this);
-
+    
     // cout << "sub_ok" << endl;
 	// cout << light_info << endl;
 	sub_line_info = handle.subscribe("line_number_direction", 5, &actuator::line_callback, this);
     sub_socket = handle.subscribe("/dispatcher/cmd",5,&actuator::socket_callback,this); 
-    
+    sub_ref_model = handle.subscribe("/dispatcher/ref_model",1,&actuator::ref_model_callback,this);
 
     pub_imu = handle.advertise<sensor_msgs::Imu>("raw", 5);	                                                 
     pub_mag = handle.advertise<sensor_msgs::MagneticField>("imu/mag", 5);                                    
@@ -240,24 +243,19 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
         pose_target.pose.orientation.z=0;
         pose_target.pose.orientation.w=1;
     }
-    
+    else;
+    if(follow_model)
+    {
+        pose_target=rect_target;
+    }
+    else;
 
     float dx=pose_target.pose.position.x;
     float dy=pose_target.pose.position.y;
     float diff_rot = 0;
     float diff_trans = 0;
     //ROS_INFO("TARGET:(%f,%f)",dx,dy);
-    if(diff_rot<-3.13)
-    {
-        diff_rot=-3.13;
-
-    }
-    else;
-    if(diff_rot>3.13)
-    {
-        diff_rot=3.13;
-    }
-    else;
+    
     if(num_of_pts==0)
     {
         //ROS_INFO("000");
@@ -393,6 +391,7 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
         moveBaseControl.TargetAngle += servo_mid;
         moveBaseControl.TargetSpeed = line_vel*32/0.43;         
     }
+
 
     pub_test.publish(test_array);
     sendCarInfoKernel();   
@@ -567,6 +566,24 @@ void actuator::movebase_fb_callbcack(const std_msgs::Int16::ConstPtr& msg)
         goal_reached=true;
     }
 }
+
+void actuator::ref_model_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg)
+{
+    geometry_msgs::PoseStamped p;
+    p.pose=msg->pose.pose;
+    p.header.frame_id=msg->header.frame_id;
+    try
+    {
+        tf_listener.transformPose("base_link",ros::Time(0),p,"odom",rect_target);
+        
+    }
+    catch(tf::TransformException &ex)
+    {
+        ROS_ERROR("%s",ex.what());
+    }
+
+}
+
 //发送小车数据到下位机
 void actuator::sendCarInfoKernel()
 {

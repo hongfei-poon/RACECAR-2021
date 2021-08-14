@@ -30,7 +30,7 @@
 #include <sensor_msgs/Range.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <move_base_msgs/MoveBaseGoal.h>
-
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PolygonStamped.h>
@@ -137,12 +137,15 @@ public:
 
      int teb_min_pts;
      bool follow_local_planner;
+     bool follow_model;
+
      nav_msgs::Path teb_path;
      std::vector<float> vel_trans;
      std::vector<float> vel_rot;
      float err_rot,err_rot_last,err_trans;
      nav_msgs::Odometry car_odom;
      geometry_msgs::PoseStamped pose_target;
+     geometry_msgs::PoseStamped rect_target;
      ros::Timer timer_teb_control;
      float controller_ang_kp,controller_ang_ki,controller_ang_kd,controller_ang_factor_vel;
      float controller_c_translation,controller_c_rotation;
@@ -156,7 +159,8 @@ public:
      ros::Subscriber sub_socket;      //订阅MFC上位机命令
      ros::Subscriber sub_localpath;        //订阅TEB路径
      ros::Subscriber sub_nav_status;
-
+     ros::Subscriber sub_ref_model;
+     
      //发布话题
      ros::Publisher pub_odom;              //发布odom topic
      ros::Publisher pub_imu;               //发布imu topic
@@ -179,6 +183,8 @@ public:
      void localpath_callback(const nav_msgs::Path::ConstPtr& msg);  
      void teb_control_callback(const ros::TimerEvent&);
      void movebase_fb_callbcack(const std_msgs::Int16::ConstPtr& msg);
+     void ref_model_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
+
 };
 
 #endif 
