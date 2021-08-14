@@ -575,6 +575,8 @@ void actuator::ref_model_callback(const geometry_msgs::PoseWithCovarianceStamped
     try
     {
         tf_listener.transformPose("base_link",ros::Time(0),p,"odom",rect_target);
+        ROS_INFO("S-APPROACH")
+        follow_model=true;
         
     }
     catch(tf::TransformException &ex)
