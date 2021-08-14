@@ -349,7 +349,7 @@ class CarDispatcherROS(threading.Thread):
         self.rect_xmin=0.18
         self.rect_ymax=-3.83
         self.rect_ymin=-5.89
-        self.rect_model_vel=0.1
+        self.rect_model_vel=0.25
         self.pth=Path()
         self.pth.header.frame_id='map'
         self.pth_length=self.rect_ymax-self.rect_ymin

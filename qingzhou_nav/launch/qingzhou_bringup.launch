@@ -16,8 +16,8 @@
       <param name="angle2" value="-0.35"/>           <!--测试专用(角度+63)-->
       <param name="direction2" value="0"/>         <!--not used -->
       <param name="line_vel" value="0.8"/>
-      <param name="line_kp" value="0.15"/>
-      <param name="line_kd" value="0.0"/>
+      <param name="line_kp" value="0.1"/>
+      <param name="line_kd" value="0.3"/>
       <param name="line_ki" value="0.0"/>
       <!--TEB CONTROLLER-->
       <param name="controller_ang_kp" value="1.7"/>

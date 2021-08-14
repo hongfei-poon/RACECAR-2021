@@ -246,6 +246,7 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
     else;
     if(follow_model)
     {
+        ROS_INFO("REFERENCE-MODEL");
         pose_target=rect_target;
     }
     else;
@@ -521,7 +522,7 @@ void actuator::run()
 void actuator::light_callback(const std_msgs::Float32::ConstPtr& msg)
 {
 	light_info = msg->data;
-	cout <<"light_info=" << light_info << endl;
+	//cout <<"light_info=" << light_info << endl;
 }
 
 void actuator::line_callback(const std_msgs::Float32MultiArray::ConstPtr& msg)
@@ -539,7 +540,9 @@ void actuator::line_callback(const std_msgs::Float32MultiArray::ConstPtr& msg)
         else
         {
             nav_status=VISUAL_CONTROL;
+
             line_info = msg->data[1];
+            follow_model=false;
             cout << "line_info=" << line_info << endl;
             cout << "-----------------------------------------"<<endl;
         }
@@ -569,21 +572,11 @@ void actuator::movebase_fb_callbcack(const std_msgs::Int16::ConstPtr& msg)
 
 void actuator::ref_model_callback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-    if(msg->pose.position.z==0.0)
-    {    
-        try
-        {
-
-            tf_listener.transformPose("base_link",ros::Time(0),*msg,"odom",rect_target);
-            
-            ROS_INFO("S-APPROACH");
-            follow_model=true;
-            
-        }
-        catch(tf::TransformException &ex)
-        {
-            ROS_ERROR("%s",ex.what());
-        }
+    follow_model=true;
+    try
+    {
+        tf_listener.transformPose("base_link",ros::Time(0),*msg,"odom",rect_target);
+        
     }
     else
     {
