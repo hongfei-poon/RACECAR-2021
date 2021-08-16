@@ -183,7 +183,7 @@ public:
      void localpath_callback(const nav_msgs::Path::ConstPtr& msg);  
      void teb_control_callback(const ros::TimerEvent&);
      void movebase_fb_callbcack(const std_msgs::Int16::ConstPtr& msg);
-     void ref_model_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
+     void ref_model_callback(const geometry_msgs::PoseStamped::ConstPtr &msg);
 
 };
 

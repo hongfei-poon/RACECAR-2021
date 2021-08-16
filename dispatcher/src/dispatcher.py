@@ -349,7 +349,7 @@ class CarDispatcherROS(threading.Thread):
         self.rect_xmin=0.18
         self.rect_ymax=-3.83
         self.rect_ymin=-5.89
-        self.rect_model_vel=0.2
+        self.rect_model_vel=0.1
         self.pth=Path()
         self.pth.header.frame_id='map'
         self.pth_length=self.rect_ymax-self.rect_ymin
@@ -437,7 +437,15 @@ class CarDispatcherROS(threading.Thread):
                 rospy.loginfo('S-Path Approaching, Reference Model Working')
                 self.s_path_model_time_start=rospy.Time.now().to_sec()
             self.s_path_approaching=True
+            self.target.pose=self.waiting_point.pose
         else:
+            self.ref_model.pose.position.z=0.5
+            self.ref_model.pose.position.x=(self.rect_xmax+self.rect_xmin)/2
+            self.ref_model.pose.position.y=self.rect_ymin+t*self.rect_model_vel
+            self.ref_model.pose.orientation.x=0
+            self.ref_model.pose.orientation.y=0
+            self.ref_model.pose.orientation.z=math.sin(math.pi/4)
+            self.ref_model.pose.orientation.w=math.cos(math.pi/4)            
             self.s_path_approaching=False
 
     def model_callback(self,event):
@@ -448,6 +456,7 @@ class CarDispatcherROS(threading.Thread):
                 self.ref_model.header.frame_id='map'
                 self.ref_model.pose.position.x=(self.rect_xmax+self.rect_xmin)/2
                 self.ref_model.pose.position.y=self.rect_ymin+t*self.rect_model_vel
+                self.ref_model.pose.position.z=0
                 self.ref_model.pose.orientation.x=0
                 self.ref_model.pose.orientation.y=0
                 self.ref_model.pose.orientation.z=math.sin(math.pi/4)

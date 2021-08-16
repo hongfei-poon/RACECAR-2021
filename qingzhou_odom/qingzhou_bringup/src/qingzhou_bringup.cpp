@@ -142,7 +142,7 @@ actuator::actuator(ros::NodeHandle handle)
 	// cout << light_info << endl;
 	sub_line_info = handle.subscribe("line_number_direction", 5, &actuator::line_callback, this);
     sub_socket = handle.subscribe("/dispatcher/cmd",5,&actuator::socket_callback,this); 
-    sub_ref_model = handle.subscribe("/dispatcher/ref_model",1,&actuator::ref_model_callback,this);
+    sub_ref_model = handle.subscribe("dispatcher/ref_model",1,&actuator::ref_model_callback,this);
 
     pub_imu = handle.advertise<sensor_msgs::Imu>("raw", 5);	                                                 
     pub_mag = handle.advertise<sensor_msgs::MagneticField>("imu/mag", 5);                                    
@@ -567,21 +567,27 @@ void actuator::movebase_fb_callbcack(const std_msgs::Int16::ConstPtr& msg)
     }
 }
 
-void actuator::ref_model_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg)
+void actuator::ref_model_callback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-    geometry_msgs::PoseStamped p;
-    p.pose=msg->pose.pose;
-    p.header.frame_id=msg->header.frame_id;
-    try
-    {
-        tf_listener.transformPose("base_link",ros::Time(0),p,"odom",rect_target);
-        ROS_INFO("S-APPROACH")
-        follow_model=true;
-        
+    if(msg->pose.position.z==0.0)
+    {    
+        try
+        {
+
+            tf_listener.transformPose("base_link",ros::Time(0),*msg,"odom",rect_target);
+            
+            ROS_INFO("S-APPROACH");
+            follow_model=true;
+            
+        }
+        catch(tf::TransformException &ex)
+        {
+            ROS_ERROR("%s",ex.what());
+        }
     }
-    catch(tf::TransformException &ex)
+    else
     {
-        ROS_ERROR("%s",ex.what());
+        follow_model=false;
     }
 
 }
