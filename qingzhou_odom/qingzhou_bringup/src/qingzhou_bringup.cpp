@@ -277,14 +277,11 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
             diff_trans = sqrt(dx * dx + dy * dy);
             
             
-            if(dx>0) 
+            if(dx>=0) 
             {
                 sign=1;
             }
-            else if(dx==0)
-            { 
-                sign=0;
-            }
+
             else 
             {
                 //ROS_INFO("ROTATION=%f",diff_rot);
@@ -332,9 +329,7 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
             err_trans = controller_c_translation * dx + sign * fabs(controller_c_rotation * diff_rot);
             err_rot = sign * diff_rot;           
             //ROS_INFO("NEAR,err_trans=%f,err_rot=%f,dx=%f,dy=%f",err_trans,err_rot,dx,dy);
-            test_array.data[0]=err_rot;
-            test_array.data[1]=err_trans;
-            test_array.data[3]=moveBaseControl.TargetSpeed;            
+           
         }
 
 
@@ -385,6 +380,10 @@ void actuator::teb_control_callback(const ros::TimerEvent&)
     {
         line_err=-line_info;
         line_angle_out=line_kp*line_err+line_kd*(line_err-line_err_last)/20.0;
+        test_array.data[0]=line_angle_out;
+        test_array.data[1]=line_kp*line_err;
+        test_array.data[2]=line_kd*(line_err-line_err_last)/20.0;
+        test_array.data[3]=line_err; 
         //ROS_INFO("VISUAL GUIDING");
         line_err_last=line_err;
 
